@@ -1,1 +1,13 @@
-{}
+{
+  "loyalista": {
+    "productPoints": {
+      "blockTitle": "Loyalista Punkte",
+      "earnPoints": "Du erhältst für diesen Artikel {points} Punkte.",
+      "earnPointsSingular": "Du erhältst für diesen Artikel {points} Punkt.",
+      "includingExtraPoints": "Inklusive {extraPoints} Extrapunkte!",
+      "includingExtraPointsSingular": "Inklusive {extraPoints} Extrapunkt!",
+      "loading": "Lade Punktedaten...",
+      "editorPreview": "Loyalista Punkteanzeige (Editor-Vorschau)"
+    }
+  }
+}
