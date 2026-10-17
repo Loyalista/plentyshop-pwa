@@ -19,9 +19,10 @@ const blocksList = {
               isGlobalTemplate: false,
             },
             content: {
-              text: {
-                title: 'Loyalista',
-              },
+              dropShadow: true,
+              borders: true,
+              borderColor: '#E5E7EB',
+              backgroundColor: '#F9FAFB',
               layout: {
                 paddingTop: 0,
                 paddingBottom: 0,
@@ -39,9 +40,10 @@ const blocksList = {
               isGlobalTemplate: false,
             },
             content: {
-              text: {
-                title: 'Loyalista',
-              },
+              dropShadow: true,
+              borders: true,
+              borderColor: '#E5E7EB',
+              backgroundColor: '#F9FAFB',
               layout: {
                 paddingTop: 0,
                 paddingBottom: 0,
@@ -64,7 +66,10 @@ export const createDefault = (): Block => ({
   type: 'content',
   meta: { uuid: crypto.randomUUID() },
   content: {
-    text: { title: 'Loyalista' },
+    dropShadow: true,
+    borders: true,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
     layout: {
       paddingTop: 0,
       paddingBottom: 0,

@@ -1,30 +1,64 @@
 <template>
   <div>
     <EditorFormPanel
-      v-model="textSettings"
-      :title="getEditorTranslation('text-settings-label')"
-      data-testid="loyalista-text-settings"
-    >
-      <div class="py-2">
-        <div class="flex justify-between mb-2">
-          <UiFormLabel>{{ getEditorTranslation('title-label') }}</UiFormLabel>
-        </div>
-        <label>
-          <SfInput v-model="blockContent.text.title" type="text" data-testid="input-loyalista-title" />
-        </label>
-      </div>
-    </EditorFormPanel>
-
-    <EditorFormPanel
       v-model="layoutSettings"
       :title="getEditorTranslation('layout-settings-label')"
       data-testid="loyalista-layout-settings"
     >
-      <EditorFullWidthToggle v-model="isFullWidth" :block-uuid="blockUuid" />
-      <div class="mt-5">
-        {{ getEditorTranslation('padding') }}
+      <div class="flex items-center justify-between py-4">
+        <UiFormLabel>{{ getEditorTranslation('drop-shadow-label') }}</UiFormLabel>
+        <SfSwitch v-model="blockContent.dropShadow" data-testid="loyalista-drop-shadow" />
       </div>
-      <div>
+
+      <div class="flex items-center justify-between py-4">
+        <UiFormLabel>{{ getEditorTranslation('borders-label') }}</UiFormLabel>
+        <SfSwitch v-model="blockContent.borders" data-testid="loyalista-borders" />
+      </div>
+
+      <div v-if="blockContent.borders" class="py-4">
+        <UiFormLabel class="mb-2 block">{{ getEditorTranslation('border-color-label') }}</UiFormLabel>
+        <EditorColorPicker v-model="blockContent.borderColor" class="w-full">
+          <template #trigger="{ color, toggle }">
+            <SfInput v-model="blockContent.borderColor" data-testid="loyalista-border-color" type="text">
+              <template #suffix>
+                <button
+                  :style="{ backgroundColor: color }"
+                  class="border border-[#a0a0a0] rounded-lg cursor-pointer w-10 h-8"
+                  type="button"
+                  aria-label="Border color picker button"
+                  @mousedown.stop
+                  @click.stop="toggle"
+                />
+              </template>
+            </SfInput>
+          </template>
+        </EditorColorPicker>
+      </div>
+
+      <div class="py-4">
+        <UiFormLabel class="mb-2 block">{{ getEditorTranslation('background-color-label') }}</UiFormLabel>
+        <EditorColorPicker v-model="blockContent.backgroundColor" class="w-full">
+          <template #trigger="{ color, toggle }">
+            <SfInput v-model="blockContent.backgroundColor" data-testid="loyalista-background-color" type="text">
+              <template #suffix>
+                <button
+                  :style="{ backgroundColor: color }"
+                  class="border border-[#a0a0a0] rounded-lg cursor-pointer w-10 h-8"
+                  type="button"
+                  aria-label="Background color picker button"
+                  @mousedown.stop
+                  @click.stop="toggle"
+                />
+              </template>
+            </SfInput>
+          </template>
+        </EditorColorPicker>
+      </div>
+
+      <EditorFullWidthToggle v-model="isFullWidth" :block-uuid="blockUuid" />
+
+      <div class="py-2">
+        <UiFormLabel>{{ getEditorTranslation('padding-label') }}</UiFormLabel>
         <div class="grid grid-cols-4 gap-px rounded-md overflow-hidden border border-gray-300">
           <div class="flex items-center justify-center gap-1 px-2 py-1 bg-white border-r">
             <span><SfIconArrowUpward /></span>
@@ -33,6 +67,7 @@
               type="number"
               class="w-12 text-center outline-none"
               data-testid="loyalista-padding-top"
+              aria-label="Top padding"
             />
           </div>
 
@@ -43,6 +78,7 @@
               type="number"
               class="w-12 text-center outline-none"
               data-testid="loyalista-padding-bottom"
+              aria-label="Bottom padding"
             />
           </div>
 
@@ -53,6 +89,7 @@
               type="number"
               class="w-12 text-center outline-none"
               data-testid="loyalista-padding-left"
+              aria-label="Left padding"
             />
           </div>
 
@@ -63,8 +100,14 @@
               type="number"
               class="w-12 text-center outline-none"
               data-testid="loyalista-padding-right"
+              aria-label="Right padding"
             />
           </div>
+        </div>
+        <div class="px-4 py-3">
+          <span class="typography-text-xs text-neutral-700">
+            {{ getEditorTranslation('spacing-around') }}
+          </span>
         </div>
       </div>
     </EditorFormPanel>
@@ -73,6 +116,7 @@
 
 <script setup lang="ts">
 import {
+  SfSwitch,
   SfInput,
   SfIconArrowUpward,
   SfIconArrowDownward,
@@ -87,15 +131,15 @@ const { allBlocks: data } = useBlocks();
 const { blockUuid } = useSiteConfiguration();
 const { findOrDeleteBlockByUuid } = useBlockManager();
 
-const textSettings = ref(true);
 const layoutSettings = ref(true);
 
 const blockContent = computed<Required<LoyalistaProductPointsContent>>(() => {
   const rawContent = findOrDeleteBlockByUuid(data.value, props.uuid || blockUuid.value)?.content ?? {};
   const content = rawContent as Partial<LoyalistaProductPointsContent>;
-  if (!content.text) {
-    content.text = { title: 'Loyalista' };
-  }
+  if (content.dropShadow === undefined) content.dropShadow = true;
+  if (content.borders === undefined) content.borders = true;
+  if (content.borderColor === undefined) content.borderColor = '#E5E7EB';
+  if (content.backgroundColor === undefined) content.backgroundColor = '#F9FAFB';
   if (!content.layout) {
     content.layout = {
       paddingTop: 0,
@@ -114,16 +158,22 @@ const { isFullWidth } = useFullWidthToggleForContent(blockContent);
 <i18n lang="json">
 {
   "en": {
-    "title-label": "Title",
-    "text-settings-label": "Text Settings",
     "layout-settings-label": "Layout Settings",
-    "padding": "Padding"
+    "drop-shadow-label": "Drop shadow",
+    "borders-label": "Borders",
+    "border-color-label": "Border color",
+    "background-color-label": "Background color",
+    "padding-label": "Padding",
+    "spacing-around": "Spacing around the elements"
   },
   "de": {
-    "title-label": "Titel",
-    "text-settings-label": "Texteinstellungen",
     "layout-settings-label": "Layout-Einstellungen",
-    "padding": "Innenabstand (Padding)"
+    "drop-shadow-label": "Schattenwurf",
+    "borders-label": "Rahmen",
+    "border-color-label": "Rahmenfarbe",
+    "background-color-label": "Hintergrundfarbe",
+    "padding-label": "Innenabstand (Padding)",
+    "spacing-around": "Abstand um die Elemente"
   }
 }
 </i18n>

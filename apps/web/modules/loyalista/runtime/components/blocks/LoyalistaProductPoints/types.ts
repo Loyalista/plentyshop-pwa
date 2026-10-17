@@ -10,9 +10,10 @@ export type LoyalistaProductPointsProps = {
 };
 
 export type LoyalistaProductPointsContent = {
-  text?: {
-    title?: string;
-  };
+  dropShadow?: boolean;
+  borders?: boolean;
+  borderColor?: string;
+  backgroundColor?: string;
   layout?: {
     paddingTop?: number;
     paddingBottom?: number;
@@ -25,3 +26,4 @@ export type LoyalistaProductPointsContent = {
 export type LoyalistaProductPointsFormProps = {
   uuid?: string;
 };
+
