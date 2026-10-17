@@ -2,10 +2,6 @@
   "loyalista": {
     "productPoints": {
       "blockTitle": "Loyalista Points",
-      "earnPoints": "You will earn {points} points for this item.",
-      "earnPointsSingular": "You will earn {points} point for this item.",
-      "includingExtraPoints": "Includes {extraPoints} extra points!",
-      "includingExtraPointsSingular": "Includes {extraPoints} extra point!",
       "loading": "Loading points data...",
       "editorPreview": "Loyalista Points Display (Editor Preview)"
     }

@@ -27,11 +27,8 @@
         <template v-if="loading && !totalPoints">
           <span class="text-neutral-500">{{ t('loyalista.productPoints.loading') }}</span>
         </template>
-        <template v-else-if="totalPoints !== null && totalPoints > 0">
-          <span class="font-medium text-neutral-900">{{ pointsText }}</span>
-          <span v-if="extraPoints > 0" class="ml-1 font-semibold text-primary-800">
-            {{ extraPointsText }}
-          </span>
+        <template v-else-if="renderedText">
+          <span class="font-medium text-neutral-900">{{ renderedText }}</span>
         </template>
         <template v-else-if="isEditMode">
           <span class="italic text-neutral-500">
@@ -49,45 +46,15 @@ import type { LoyalistaProductPointsProps } from './types';
 
 const props = defineProps<LoyalistaProductPointsProps>();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const { isEditMode } = useEditorState();
 const { registerBlockVisibility } = useBlocksVisibility();
 
 const {
   loading,
-  extraPoints,
   totalPoints,
+  renderedText,
 } = useLoyalistaProductPoints();
-
-const formattedTotalPoints = computed<string>(() => {
-  if (totalPoints.value === null) return '';
-  const loc = locale.value === 'de' ? 'de-DE' : 'en-US';
-  return totalPoints.value.toLocaleString(loc);
-});
-
-const formattedExtraPoints = computed<string>(() => {
-  if (!extraPoints.value) return '';
-  const loc = locale.value === 'de' ? 'de-DE' : 'en-US';
-  return extraPoints.value.toLocaleString(loc);
-});
-
-const pointsText = computed<string>(() => {
-  if (totalPoints.value === 1) {
-    return t('loyalista.productPoints.earnPointsSingular', { points: formattedTotalPoints.value });
-  }
-  return t('loyalista.productPoints.earnPoints', { points: formattedTotalPoints.value });
-});
-
-const extraPointsText = computed<string>(() => {
-  if (extraPoints.value === 1) {
-    return t('loyalista.productPoints.includingExtraPointsSingular', {
-      extraPoints: formattedExtraPoints.value,
-    });
-  }
-  return t('loyalista.productPoints.includingExtraPoints', {
-    extraPoints: formattedExtraPoints.value,
-  });
-});
 
 const shouldRender = computed<boolean>(() => {
   if (isEditMode.value) {
@@ -96,7 +63,7 @@ const shouldRender = computed<boolean>(() => {
   if (loading.value) {
     return true;
   }
-  return totalPoints.value !== null && totalPoints.value > 0;
+  return totalPoints.value !== null && totalPoints.value > 0 && !!renderedText.value;
 });
 
 const isDropShadow = computed<boolean>(() => props.content?.dropShadow ?? true);

@@ -1,6 +1,14 @@
 import { computed, watch, onMounted } from 'vue';
 import { productGetters } from '@plentymarkets/shop-api';
 
+export interface LoyalistaMerchantTexts {
+  heading?: string | null;
+  registered?: string | null;
+  unregistered?: string | null;
+  extra_points?: string | null;
+  points_label?: string | null;
+}
+
 export interface LoyalistaProductDataResponse {
   user_registered?: boolean;
   revenue_to_point?: number | string;
@@ -10,6 +18,7 @@ export interface LoyalistaProductDataResponse {
   product_extra_points?: number | string;
   category_ids?: string;
   product_ids?: string;
+  texts?: LoyalistaMerchantTexts;
 }
 
 export interface LoyalistaApiResponse {
@@ -19,18 +28,74 @@ export interface LoyalistaApiResponse {
 }
 
 /**
+ * Replace tokens in template text according to the LTS specification.
+ *
+ * Supported tokens:
+ * - [points_for_product]  Base earning points for the product
+ * - [number_of_points]    Base earning points for the product (synonym)
+ * - [points_for_signup]   Bonus points for account registration
+ * - [number_of_extra_points] Extra points from product or category bonus
+ * - [points_label]        Configured label for points (e.g. "Punkte" / "Points")
+ */
+export const replaceLoyalistaTokens = (
+  template: string,
+  replacements: {
+    earningPoints?: number | string | null;
+    pointsForSignup?: number | string | null;
+    extraPoints?: number | string | null;
+    pointsLabel?: string | null;
+  },
+  locale = 'de-DE',
+): string => {
+  let content = template;
+
+  const earningFormatted =
+    replacements.earningPoints !== undefined && replacements.earningPoints !== null
+      ? typeof replacements.earningPoints === 'number'
+        ? replacements.earningPoints.toLocaleString(locale)
+        : String(replacements.earningPoints)
+      : '';
+  content = content.replace(/\[points_for_product\]/gi, earningFormatted);
+  content = content.replace(/\[number_of_points\]/gi, earningFormatted);
+
+  const signupFormatted =
+    replacements.pointsForSignup !== undefined && replacements.pointsForSignup !== null
+      ? typeof replacements.pointsForSignup === 'number'
+        ? replacements.pointsForSignup.toLocaleString(locale)
+        : String(replacements.pointsForSignup)
+      : '';
+  content = content.replace(/\[points_for_signup\]/gi, signupFormatted);
+
+  if (replacements.extraPoints !== undefined && replacements.extraPoints !== null) {
+    const extraFormatted =
+      typeof replacements.extraPoints === 'number'
+        ? replacements.extraPoints.toLocaleString(locale)
+        : String(replacements.extraPoints);
+    content = content.replace(/\[number_of_extra_points\]/gi, extraFormatted);
+  }
+
+  const label = replacements.pointsLabel || '';
+  content = content.replace(/\[points_label\]/gi, label);
+
+  return content;
+};
+
+/**
  * Composable for managing Loyalista product points on the product detail page.
  *
  * Responsibilities:
  * - Read current product, variation ID, and price from official PlentyONE composables
- * - Fetch loyalty program configuration from existing PlentyONE plugin endpoint
+ * - Fetch loyalty program configuration & merchant texts from existing PlentyONE plugin endpoint
+ * - Support both guest visitors and registered customers
  * - Calculate earning points based on active price and revenue_to_point ratio
  * - Calculate extra points based on category and variation matching
- * - Provide reactive state (loading, error, total points) without silent fallbacks
+ * - Render merchant texts with token replacement matching LTS
+ * - Provide reactive state without silent fallbacks
  */
 export const useLoyalistaProductPoints = () => {
   const { currentProduct } = useProducts();
   const { isAuthorized } = useCustomer();
+  const { locale } = useI18n();
 
   const loading = useState<boolean>('loyalista-product-points-loading', () => false);
   const error = useState<string | null>('loyalista-product-points-error', () => null);
@@ -42,18 +107,13 @@ export const useLoyalistaProductPoints = () => {
   let fetchPromise: Promise<LoyalistaProductDataResponse | null> | null = null;
 
   /**
-   * Fetch loyalty program configuration from the existing PlentyONE plugin endpoint.
+   * Fetch loyalty program configuration & merchant texts from the existing PlentyONE plugin endpoint.
+   * Both authenticated customers and guests are supported.
    * Cached in Nuxt state to avoid duplicate requests during variation changes.
    */
   const fetchProductData = async (force = false): Promise<LoyalistaProductDataResponse | null> => {
     // Only execute on client because /rest/ is handled by the PlentyONE PHP backend
     if (!import.meta.client) {
-      return null;
-    }
-
-    // Do not fetch customer-specific loyalty data if customer is not logged in
-    if (!isAuthorized.value) {
-      productData.value = null;
       return null;
     }
 
@@ -215,20 +275,54 @@ export const useLoyalistaProductPoints = () => {
 
   const isRegistered = computed<boolean>(() => Boolean(productData.value?.user_registered));
 
+  /**
+   * Rendered merchant text with token substitution.
+   * Selects registered or unregistered text according to user_registered status.
+   * Appends extra_points text if applicable.
+   * Returns null if required merchant configuration is not available (no silent fallback).
+   */
+  const renderedText = computed<string | null>(() => {
+    if (!productData.value || !productData.value.texts) {
+      return null;
+    }
+
+    let template = isRegistered.value
+      ? productData.value.texts.registered
+      : productData.value.texts.unregistered;
+
+    if (!template || !template.trim()) {
+      return null;
+    }
+
+    if (extraPoints.value > 0 && productData.value.texts.extra_points) {
+      template = `${template.trim()} ${productData.value.texts.extra_points.trim()}`;
+    }
+
+    const numberLocale = locale.value === 'de' ? 'de-DE' : 'en-US';
+
+    return replaceLoyalistaTokens(
+      template,
+      {
+        earningPoints: earningPoints.value ?? 0,
+        pointsForSignup: productData.value.points_for_signup ?? '',
+        extraPoints: extraPoints.value,
+        pointsLabel: productData.value.texts.points_label ?? '',
+      },
+      numberLocale,
+    );
+  });
+
   if (import.meta.client) {
     watch(
       isAuthorized,
-      (authorized) => {
-        if (authorized) {
-          fetchProductData(true);
-        } else {
-          productData.value = null;
-        }
+      () => {
+        // Refetch product data to refresh user_registered status and text for newly logged-in/logged-out customer
+        fetchProductData(true);
       },
     );
 
     onMounted(() => {
-      if (isAuthorized.value && !productData.value && !loading.value) {
+      if (!productData.value && !loading.value) {
         fetchProductData();
       }
     });
@@ -248,5 +342,6 @@ export const useLoyalistaProductPoints = () => {
     totalPoints,
     isRegistered,
     isAuthorized,
+    renderedText,
   };
 };
