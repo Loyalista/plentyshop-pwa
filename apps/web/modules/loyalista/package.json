@@ -5,13 +5,13 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/module.mjs"
+      "import": "./index.ts"
     },
     "./runtime/*": {
-      "import": "./dist/runtime/*"
+      "import": "./runtime/*"
     }
   },
-  "main": "./dist/module.mjs",
+  "main": "./index.ts",
   "files": [
     "dist"
   ],
