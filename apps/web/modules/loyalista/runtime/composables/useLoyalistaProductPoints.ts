@@ -1,4 +1,4 @@
-import { computed, onMounted } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { productGetters } from '@plentymarkets/shop-api';
 
 export interface LoyalistaProductDataResponse {
@@ -30,6 +30,7 @@ export interface LoyalistaApiResponse {
  */
 export const useLoyalistaProductPoints = () => {
   const { currentProduct } = useProducts();
+  const { isAuthorized } = useCustomer();
 
   const loading = useState<boolean>('loyalista-product-points-loading', () => false);
   const error = useState<string | null>('loyalista-product-points-error', () => null);
@@ -45,6 +46,17 @@ export const useLoyalistaProductPoints = () => {
    * Cached in Nuxt state to avoid duplicate requests during variation changes.
    */
   const fetchProductData = async (force = false): Promise<LoyalistaProductDataResponse | null> => {
+    // Only execute on client because /rest/ is handled by the PlentyONE PHP backend
+    if (!import.meta.client) {
+      return null;
+    }
+
+    // Do not fetch customer-specific loyalty data if customer is not logged in
+    if (!isAuthorized.value) {
+      productData.value = null;
+      return null;
+    }
+
     if (productData.value && !force) {
       return productData.value;
     }
@@ -203,11 +215,24 @@ export const useLoyalistaProductPoints = () => {
 
   const isRegistered = computed<boolean>(() => Boolean(productData.value?.user_registered));
 
-  onMounted(() => {
-    if (!productData.value && !loading.value) {
-      fetchProductData();
-    }
-  });
+  if (import.meta.client) {
+    watch(
+      isAuthorized,
+      (authorized) => {
+        if (authorized) {
+          fetchProductData(true);
+        } else {
+          productData.value = null;
+        }
+      },
+    );
+
+    onMounted(() => {
+      if (isAuthorized.value && !productData.value && !loading.value) {
+        fetchProductData();
+      }
+    });
+  }
 
   return {
     currentProduct,
@@ -222,5 +247,6 @@ export const useLoyalistaProductPoints = () => {
     extraPoints,
     totalPoints,
     isRegistered,
+    isAuthorized,
   };
 };

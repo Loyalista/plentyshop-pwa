@@ -9,7 +9,7 @@
       :class="[
         'flex items-center gap-3 rounded-lg p-3.5 text-sm text-neutral-800 transition-all',
         {
-          'shadow-sm': isDropShadow,
+          'shadow-md @md:shadow-lg': isDropShadow,
           border: hasBorders,
         },
       ]"
@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { LoyalistaProductPointsProps } from './types';
 
 const props = defineProps<LoyalistaProductPointsProps>();
@@ -123,12 +123,22 @@ const wrapperStyle = computed(() => {
   };
 });
 
-watch(
-  shouldRender,
-  (visible) => {
-    registerBlockVisibility(props.meta.uuid, visible);
-  },
-  { immediate: true },
-);
+if (import.meta.client) {
+  watch(
+    shouldRender,
+    (visible) => {
+      registerBlockVisibility(props.meta.uuid, visible);
+    },
+    { immediate: false },
+  );
+
+  onMounted(() => {
+    registerBlockVisibility(props.meta.uuid, shouldRender.value);
+  });
+
+  onBeforeUnmount(() => {
+    registerBlockVisibility(props.meta.uuid, false);
+  });
+}
 </script>
 
