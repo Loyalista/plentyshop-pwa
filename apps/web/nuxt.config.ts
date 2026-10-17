@@ -152,6 +152,7 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/test-utils/module',
     '@nuxtjs/critters',
+    '~~/modules/loyalista',
     '@nuxtjs/i18n',
     '~~/modules/locale-routes',
     '@nuxtjs/tailwindcss',

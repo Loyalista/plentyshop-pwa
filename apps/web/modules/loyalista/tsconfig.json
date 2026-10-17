@@ -1,0 +1,11 @@
+{
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "types": ["@nuxt/kit", "@nuxt/schema", "@nuxtjs/tailwindcss", "@nuxtjs/i18n"]
+  },
+  "include": ["**/*.ts", ".nuxt/**/*.d.ts"],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@loyalista/pwa-module",
+  "version": "0.1.0-dev",
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/module.mjs"
+    },
+    "./runtime/*": {
+      "import": "./dist/runtime/*"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run dev:prepare && nuxt-module-build build",
+    "dev:prepare": "nuxt-module-build build --stub && nuxi prepare",
+    "setup": "npm install && npm run build",
+    "format": "prettier --check \"**/*.{ts,vue,css,scss,md}\"",
+    "format:fix": "prettier --write \"**/*.{ts,vue,css,scss,md}\""
+  },
+  "dependencies": {
+    "pathe": "1.1.2"
+  },
+  "devDependencies": {
+    "@nuxt/module-builder": "1.0.1",
+    "@nuxtjs/i18n": "9.1.0",
+    "@nuxtjs/tailwindcss": "6.12.2",
+    "@storefront-ui/vue": "2.6.4",
+    "nuxt": "3.17.5",
+    "prettier": "3.4.2",
+    "typescript": "5.8.3",
+    "vue": "3.5.13",
+    "vue-tsc": "2.2.10"
+  }
+}
