@@ -54,6 +54,7 @@ export default defineNuxtModule({
      */
     addComponentsDir({
       path: resolve('./runtime/components'),
+      pattern: '**/*.vue',
       pathPrefix: false,
     });
 

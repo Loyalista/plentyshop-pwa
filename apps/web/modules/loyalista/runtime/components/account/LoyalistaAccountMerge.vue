@@ -26,28 +26,28 @@
           @input="clearMessages"
         />
 
-        <button
+        <UiButton
           v-if="pendingRefetch"
           type="button"
+          size="sm"
           :disabled="loading"
-          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="loyalista-merge-retry-button"
           @click="fetchAccountData(true)"
         >
           <SfLoaderCircular v-if="loading" size="sm" class="mr-2 text-white" />
           {{ t('loyalista.account.retry') }}
-        </button>
+        </UiButton>
 
-        <button
+        <UiButton
           v-else
           type="submit"
+          size="sm"
           :disabled="!emailInput.trim() || actionLoading"
-          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="loyalista-merge-button"
         >
           <SfLoaderCircular v-if="actionLoading" size="sm" class="mr-2 text-white" />
           {{ mergeBtnLabel }}
-        </button>
+        </UiButton>
       </div>
 
       <div

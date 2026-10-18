@@ -14,7 +14,11 @@
       "mergeSuccess": "Request created successfully.",
       "birthdaySuccess": "Birth date successfully saved.",
       "invalidEmail": "Invalid or missing email address",
-      "invalidDate": "Invalid date format"
+      "invalidDate": "Invalid date format",
+      "guestHeading": "Loyalty Program & Points",
+      "guestDescription": "Log in to check your points balance, redeem rewards, and manage your loyalty account.",
+      "login": "Log in now",
+      "editorPreviewNotice": "Shop-Editor preview (Sample data)"
     }
   }
 }

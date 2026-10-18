@@ -5,7 +5,7 @@
       class="flex flex-col items-center justify-center p-8 bg-neutral-50 rounded-lg border border-neutral-200 text-neutral-600 my-4"
       data-testid="loyalista-account-loading"
     >
-      <SfLoaderCircular size="lg" class="mb-4 text-primary-600" />
+      <SfLoaderCircular size="lg" class="mb-4 text-primary-500" />
       <p class="typography-text-base font-medium">
         {{ t('loyalista.account.loading') }}
       </p>
@@ -25,14 +25,14 @@
           <p class="typography-text-sm text-negative-700 mb-4">
             {{ error }}
           </p>
-          <button
+          <UiButton
             type="button"
-            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors"
+            size="sm"
             data-testid="loyalista-account-retry-button"
             @click="fetchAccountData(true)"
           >
             {{ t('loyalista.account.retry') }}
-          </button>
+          </UiButton>
         </div>
       </div>
     </div>
@@ -125,11 +125,10 @@
             class="flex items-start gap-3 cursor-pointer select-none"
             data-testid="loyalista-optout-checkbox-label"
           >
-            <input
+            <SfCheckbox
               v-model="optOutConsent"
               :disabled="pendingRefetch || actionLoading"
-              type="checkbox"
-              class="h-5 w-5 mt-0.5 rounded border-neutral-300 text-negative-600 focus:ring-negative-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              class="mt-0.5 text-primary-500"
               data-testid="loyalista-optout-checkbox"
             />
             <span class="typography-text-sm text-neutral-700 leading-relaxed" data-testid="loyalista-optout-disclaimer">
@@ -147,29 +146,31 @@
           <span>{{ actionError }}</span>
         </div>
 
-        <button
+        <UiButton
           v-if="pendingRefetch"
           type="button"
+          size="sm"
           :disabled="loading"
-          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           data-testid="loyalista-optout-retry-button"
           @click="fetchAccountData(true)"
         >
           <SfLoaderCircular v-if="loading" size="sm" class="mr-2 text-white" />
           {{ t('loyalista.account.retry') }}
-        </button>
+        </UiButton>
 
-        <button
+        <UiButton
           v-else
           type="button"
+          variant="secondary"
+          size="sm"
           :disabled="!optOutConsent || actionLoading"
-          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-negative-700 hover:text-negative-800 bg-white border border-negative-300 hover:bg-negative-50 active:bg-negative-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="!text-negative-700 !border-negative-300 hover:!bg-negative-50"
           data-testid="loyalista-optout-button"
           @click="handleUnregister"
         >
           <SfLoaderCircular v-if="actionLoading" size="sm" class="mr-2 text-negative-700" />
           {{ unregisterBtnLabel }}
-        </button>
+        </UiButton>
       </div>
     </div>
 
@@ -180,11 +181,10 @@
     >
       <div class="mb-6">
         <label class="flex items-start gap-3 cursor-pointer select-none" data-testid="loyalista-optin-checkbox-label">
-          <input
+          <SfCheckbox
             v-model="optInConsent"
             :disabled="pendingRefetch || actionLoading"
-            type="checkbox"
-            class="h-5 w-5 mt-0.5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            class="mt-0.5 text-primary-500"
             data-testid="loyalista-optin-checkbox"
           />
           <span
@@ -205,36 +205,36 @@
         <span>{{ actionError }}</span>
       </div>
 
-      <button
+      <UiButton
         v-if="pendingRefetch"
         type="button"
         :disabled="loading"
-        class="inline-flex items-center justify-center px-6 py-2.5 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-6 py-2.5"
         data-testid="loyalista-optin-retry-button"
         @click="fetchAccountData(true)"
       >
         <SfLoaderCircular v-if="loading" size="sm" class="mr-2 text-white" />
         {{ t('loyalista.account.retry') }}
-      </button>
+      </UiButton>
 
-      <button
+      <UiButton
         v-else
         type="button"
         :disabled="!optInConsent || actionLoading"
-        class="inline-flex items-center justify-center px-6 py-2.5 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-6 py-2.5"
         data-testid="loyalista-optin-button"
         @click="handleRegister"
       >
         <SfLoaderCircular v-if="actionLoading" size="sm" class="mr-2 text-white" />
         {{ joinBtnLabel }}
-      </button>
+      </UiButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { SfLoaderCircular, SfIconWarning } from '@storefront-ui/vue';
+import { SfLoaderCircular, SfIconWarning, SfCheckbox } from '@storefront-ui/vue';
 import { useLoyalistaAccount } from '../../composables/useLoyalistaAccount';
 import LoyalistaAccountBirthday from './LoyalistaAccountBirthday.vue';
 import LoyalistaAccountMerge from './LoyalistaAccountMerge.vue';

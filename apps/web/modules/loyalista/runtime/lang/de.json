@@ -14,7 +14,11 @@
       "mergeSuccess": "Anfrage erfolgreich erstellt.",
       "birthdaySuccess": "Geburtsdatum erfolgreich gespeichert.",
       "invalidEmail": "Ungültige oder fehlende E-Mail-Adresse",
-      "invalidDate": "Ungültiges Datumsformat"
+      "invalidDate": "Ungültiges Datumsformat",
+      "guestHeading": "Treueprogramm & Bonuspunkte",
+      "guestDescription": "Melden Sie sich an, um Ihren aktuellen Punktestand einzusehen, Punkte einzulösen und Ihr Bonuskonto zu verwalten.",
+      "login": "Jetzt anmelden",
+      "editorPreviewNotice": "Vorschau im Shop-Editor (Beispieldaten)"
     }
   }
 }

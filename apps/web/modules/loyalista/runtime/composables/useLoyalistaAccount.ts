@@ -86,6 +86,7 @@ export const useLoyalistaAccount = () => {
   const nuxtApp = useNuxtApp();
   const { isAuthorized } = useCustomer();
   const { locale } = useI18n();
+  const { isEditMode, shouldUseFakeData } = useEditorState();
 
   const loading = useState<boolean>('loyalista-account-loading', () => false);
   const error = useState<string | null>('loyalista-account-error', () => null);
@@ -95,6 +96,80 @@ export const useLoyalistaAccount = () => {
   const actionLoading = useState<boolean>('loyalista-account-action-loading', () => false);
   const actionError = useState<string | null>('loyalista-account-action-error', () => null);
   const pendingRefetch = useState<boolean>('loyalista-account-pending-refetch', () => false);
+
+  /**
+   * Generates realistic example data for Shop-Editor preview mode.
+   * Strictly isolated to isEditMode / shouldUseFakeData and never triggers API mutations.
+   */
+  const getEditorPreviewData = (currentLocale: string): LoyalistaAccountDataResponse => {
+    const isDe = currentLocale.toLowerCase().startsWith('de');
+    return {
+      user_registered: true,
+      all_points: {
+        valid_points: 250,
+        locked_points: 50,
+        expiring_in_threshold_points: 25,
+        total_points: 300,
+      },
+      point_to_conversion: 0.01,
+      revenue_to_point: 1,
+      point_to_value: 0.01,
+      expiry_period: 365,
+      expiry_days_threshold: 30,
+      signup_points: 100,
+      birthday_points: 50,
+      customer: {
+        birthday: '1990-05-15',
+      },
+      texts: {
+        heading: isDe ? 'Mein Bonuspunktekonto' : 'My Loyalty Account',
+        points_label: isDe ? 'Bonuspunkte' : 'Bonus points',
+        jsRedeemablePoints: isDe ? 'Verfügbar' : 'Redeemable',
+        jsLockedPoints: isDe ? 'Gesperrt' : 'Pending',
+        jsExpiringPoints: isDe ? 'Demnächst verfallend' : 'Expiring soon',
+        redeem_hint: isDe
+          ? 'Sie haben aktuell [total_number_of_redeemable_points] [points_label] im Wert von [value_of_account_balance] € zur Einlösung verfügbar.'
+          : 'You currently have [total_number_of_redeemable_points] [points_label] worth €[value_of_account_balance] available to redeem.',
+        locked_hint: isDe
+          ? '[total_number_of_locked_points] [points_label] sind derzeit noch gesperrt und werden nach Ablauf der Rückgabefrist freigegeben.'
+          : '[total_number_of_locked_points] [points_label] are currently pending and will be unlocked after the return period.',
+        expiry_hint: isDe
+          ? 'In den nächsten [date_of_expiry] Tagen verfallen [amount_of_points] [points_label].'
+          : '[amount_of_points] [points_label] will expire in the next [date_of_expiry] days.',
+        unregistered_offer: isDe
+          ? 'Nehmen Sie an unserem Bonusprogramm teil und erhalten Sie [signup_points] [points_label] als Willkommensgeschenk!'
+          : 'Join our loyalty program and receive [signup_points] [points_label] as a welcome gift!',
+        join_btn_label: isDe ? 'Jetzt am Bonusprogramm teilnehmen' : 'Join loyalty program now',
+        btn_label: isDe ? 'Vom Bonusprogramm abmelden' : 'Unregister from loyalty program',
+        disclaimer: isDe
+          ? 'Wenn Sie sich abmelden, verfallen Ihre gesammelten [points_label].'
+          : 'If you unregister, your accumulated [points_label] will be forfeited.',
+        birthday_hint: isDe
+          ? 'Erhalten Sie an Ihrem Geburtstag [birthday_points] [points_label].'
+          : 'Receive [birthday_points] [points_label] on your birthday.',
+        save_btn_label: isDe ? 'Geburtstag speichern' : 'Save birthday',
+        join_request_hint: isDe
+          ? 'Punkte unter einer anderen E-Mail-Adresse gesammelt? Beantragen Sie hier die Zusammenführung.'
+          : 'Collected points under a different email? Request an account merge here.',
+        merge_btn_label: isDe ? 'Zusammenführung beantragen' : 'Request merge',
+        errorOccurred: isDe ? 'Ein Fehler ist aufgetreten: {error}' : 'An error occurred: {error}',
+        errorLoyaltyDataLoad: isDe ? 'Fehler beim Laden der Loyalty-Daten.' : 'Error loading loyalty data.',
+        errorEnterBirthday: isDe ? 'Bitte geben Sie ein Geburtsdatum ein.' : 'Please enter a birthdate.',
+        successBirthdaySaved: isDe ? 'Geburtsdatum erfolgreich gespeichert.' : 'Birthdate saved successfully.',
+        errorBirthdaySave: isDe ? 'Fehler beim Speichern des Geburtsdatums.' : 'Error saving birthdate.',
+      },
+    };
+  };
+
+  /**
+   * Effective account data accounting for Editor Mode fake data.
+   */
+  const effectiveAccountData = computed<LoyalistaAccountDataResponse | null>(() => {
+    if (isEditMode?.value || shouldUseFakeData?.value) {
+      return getEditorPreviewData(locale.value);
+    }
+    return accountData.value;
+  });
 
   const getInFlightFetch = (): Promise<LoyalistaAccountDataResponse | null> | null => {
     return (
@@ -146,6 +221,10 @@ export const useLoyalistaAccount = () => {
    * @param force - If true, bypasses in-flight request deduplication and cached state
    */
   const fetchAccountData = async (force = false): Promise<LoyalistaAccountDataResponse | null> => {
+    if (isEditMode?.value || shouldUseFakeData?.value) {
+      return effectiveAccountData.value;
+    }
+
     if (!import.meta.client) {
       return null;
     }
@@ -234,13 +313,13 @@ export const useLoyalistaAccount = () => {
   /**
    * Whether the authenticated customer is registered in the loyalty program.
    */
-  const isRegistered = computed<boolean>(() => Boolean(accountData.value?.user_registered));
+  const isRegistered = computed<boolean>(() => Boolean(effectiveAccountData.value?.user_registered));
 
   /**
    * Redeemable points balance.
    */
   const validPoints = computed<number>(() => {
-    const raw = accountData.value?.all_points?.valid_points;
+    const raw = effectiveAccountData.value?.all_points?.valid_points;
     return typeof raw === 'number' ? raw : parseFloat(String(raw || 0)) || 0;
   });
 
@@ -248,7 +327,7 @@ export const useLoyalistaAccount = () => {
    * Locked points balance awaiting order completion.
    */
   const lockedPoints = computed<number>(() => {
-    const raw = accountData.value?.all_points?.locked_points;
+    const raw = effectiveAccountData.value?.all_points?.locked_points;
     return typeof raw === 'number' ? raw : parseFloat(String(raw || 0)) || 0;
   });
 
@@ -256,7 +335,7 @@ export const useLoyalistaAccount = () => {
    * Points expiring within the configured threshold period.
    */
   const expiringPoints = computed<number>(() => {
-    const raw = accountData.value?.all_points?.expiring_in_threshold_points;
+    const raw = effectiveAccountData.value?.all_points?.expiring_in_threshold_points;
     return typeof raw === 'number' ? raw : parseFloat(String(raw || 0)) || 0;
   });
 
@@ -269,7 +348,7 @@ export const useLoyalistaAccount = () => {
    * Conversion rate from points to currency value.
    */
   const pointToConversion = computed<number | null>(() => {
-    const raw = accountData.value?.point_to_conversion || accountData.value?.point_to_value;
+    const raw = effectiveAccountData.value?.point_to_conversion || effectiveAccountData.value?.point_to_value;
     if (raw === undefined || raw === null || raw === '') {
       return null;
     }
@@ -292,25 +371,25 @@ export const useLoyalistaAccount = () => {
    * Expiry threshold in days from the backend configuration.
    */
   const expiryDaysThreshold = computed<number | string>(() => {
-    return accountData.value?.expiry_days_threshold ?? '';
+    return effectiveAccountData.value?.expiry_days_threshold ?? '';
   });
 
   /**
    * Merchant-configured label for points (e.g. "Punkte" / "Points").
    */
-  const pointsLabel = computed<string>(() => accountData.value?.texts?.points_label || '');
+  const pointsLabel = computed<string>(() => effectiveAccountData.value?.texts?.points_label || '');
 
   /**
    * Merchant-configured category labels from backend translations.
    */
-  const redeemableLabel = computed<string>(() => accountData.value?.texts?.jsRedeemablePoints || '');
-  const lockedLabel = computed<string>(() => accountData.value?.texts?.jsLockedPoints || '');
-  const expiringLabel = computed<string>(() => accountData.value?.texts?.jsExpiringPoints || '');
+  const redeemableLabel = computed<string>(() => effectiveAccountData.value?.texts?.jsRedeemablePoints || '');
+  const lockedLabel = computed<string>(() => effectiveAccountData.value?.texts?.jsLockedPoints || '');
+  const expiringLabel = computed<string>(() => effectiveAccountData.value?.texts?.jsExpiringPoints || '');
 
   /**
    * Merchant-configured heading for account widget.
    */
-  const heading = computed<string>(() => accountData.value?.texts?.heading || '');
+  const heading = computed<string>(() => effectiveAccountData.value?.texts?.heading || '');
 
   const numberLocale = computed(() => (locale.value === 'de' ? 'de-DE' : 'en-US'));
 
@@ -318,7 +397,7 @@ export const useLoyalistaAccount = () => {
    * Hint text for redeemable points with tokens replaced.
    */
   const redeemHint = computed<string | null>(() => {
-    const template = accountData.value?.texts?.redeem_hint;
+    const template = effectiveAccountData.value?.texts?.redeem_hint;
     if (!template || !template.trim()) return null;
     if (/\[value_of_account_balance\]/i.test(template) && accountBalance.value === null) {
       return null;
@@ -339,7 +418,7 @@ export const useLoyalistaAccount = () => {
    * Hint text for locked points with tokens replaced.
    */
   const lockedHint = computed<string | null>(() => {
-    const template = accountData.value?.texts?.locked_hint;
+    const template = effectiveAccountData.value?.texts?.locked_hint;
     if (!template || !template.trim()) return null;
     return replaceLoyalistaAccountTokens(
       template,
@@ -355,7 +434,7 @@ export const useLoyalistaAccount = () => {
    * Hint text for expiring points with tokens replaced.
    */
   const expiryHint = computed<string | null>(() => {
-    const template = accountData.value?.texts?.expiry_hint;
+    const template = effectiveAccountData.value?.texts?.expiry_hint;
     if (!template || !template.trim()) return null;
     if (/\[value_of_account_balance\]/i.test(template) && accountBalance.value === null) {
       return null;
@@ -383,13 +462,13 @@ export const useLoyalistaAccount = () => {
    * Offer text for logged-in but unregistered customers with tokens replaced.
    */
   const unregisteredOffer = computed<string | null>(() => {
-    const template = accountData.value?.texts?.unregistered_offer;
+    const template = effectiveAccountData.value?.texts?.unregistered_offer;
     if (!template || !template.trim()) return null;
     return replaceLoyalistaAccountTokens(
       template,
       {
         pointsLabel: pointsLabel.value,
-        signupPoints: accountData.value?.signup_points,
+        signupPoints: effectiveAccountData.value?.signup_points,
       },
       numberLocale.value,
     );
@@ -398,18 +477,18 @@ export const useLoyalistaAccount = () => {
   /**
    * Merchant-configured label for opt-in / join button.
    */
-  const joinBtnLabel = computed<string>(() => accountData.value?.texts?.join_btn_label || '');
+  const joinBtnLabel = computed<string>(() => effectiveAccountData.value?.texts?.join_btn_label || '');
 
   /**
    * Merchant-configured label for opt-out / unregister button.
    */
-  const unregisterBtnLabel = computed<string>(() => accountData.value?.texts?.btn_label || '');
+  const unregisterBtnLabel = computed<string>(() => effectiveAccountData.value?.texts?.btn_label || '');
 
   /**
    * Disclaimer text for opt-out / unregistering from loyalty program with tokens replaced.
    */
   const disclaimer = computed<string | null>(() => {
-    const template = accountData.value?.texts?.disclaimer;
+    const template = effectiveAccountData.value?.texts?.disclaimer;
     if (!template || !template.trim()) return null;
     if (/\[value_of_account_balance\]/i.test(template) && accountBalance.value === null) {
       return null;
@@ -422,7 +501,7 @@ export const useLoyalistaAccount = () => {
         lockedPoints: lockedPoints.value,
         expiringPoints: expiringPoints.value,
         accountBalance: accountBalance.value,
-        signupPoints: accountData.value?.signup_points,
+        signupPoints: effectiveAccountData.value?.signup_points,
       },
       numberLocale.value,
     );
@@ -459,6 +538,13 @@ export const useLoyalistaAccount = () => {
    * stale response suppression, and coordination of postSuccess with pendingRefetch.
    */
   const executeMutation = async (config: MutationConfig): Promise<LoyalistaMutationResult> => {
+    if (isEditMode?.value || shouldUseFakeData?.value) {
+      return Promise.resolve({
+        success: false,
+        message: 'Aktionen sind im Editor-Modus deaktiviert.',
+      });
+    }
+
     if (pendingRefetch.value) {
       return Promise.resolve({ success: false, postSuccess: true, refetchSuccess: false });
     }
@@ -531,7 +617,7 @@ export const useLoyalistaAccount = () => {
           return { success: true, postSuccess: true, refetchSuccess: true, message: successMessage };
         } else {
           const refreshError =
-            accountData.value?.texts?.errorLoyaltyDataLoad || error.value || 'Failed to load loyalty account data';
+            effectiveAccountData.value?.texts?.errorLoyaltyDataLoad || error.value || 'Failed to load loyalty account data';
           actionError.value = refreshError;
           actionLoading.value = false;
           return { success: false, postSuccess: true, refetchSuccess: false, message: refreshError };
@@ -557,35 +643,35 @@ export const useLoyalistaAccount = () => {
 
   /**
    * Registers the currently authenticated customer in the Loyalista loyalty program.
-   * Sends POST /account/register/customer/ to the PlentyONE storefront controller.
+   * Sends POST /rest/loyalista/account/register/ to the PlentyONE REST controller.
    */
   const registerCustomer = async (): Promise<LoyalistaMutationResult> => {
     return executeMutation({
-      endpoint: '/account/register/customer/',
+      endpoint: '/rest/loyalista/account/register/',
       isSuccess: (result) => Boolean(result && result.success === true),
       getErrorMessage: (result) =>
-        sanitizeErrorMessage(result?.message, accountData.value?.texts?.errorOccurred || 'Registration failed'),
+        sanitizeErrorMessage(result?.message, effectiveAccountData.value?.texts?.errorOccurred || 'Registration failed'),
       defaultErrorMsg: 'Registration failed',
     });
   };
 
   /**
    * Unregisters the currently authenticated customer from the Loyalista loyalty program.
-   * Sends POST /account/unregister/customer/ to the PlentyONE storefront controller.
+   * Sends POST /rest/loyalista/account/unregister/ to the PlentyONE REST controller.
    */
   const unregisterCustomer = async (): Promise<LoyalistaMutationResult> => {
     return executeMutation({
-      endpoint: '/account/unregister/customer/',
+      endpoint: '/rest/loyalista/account/unregister/',
       isSuccess: (result) => Boolean(result && result.status === 'OK'),
       getErrorMessage: (result) =>
-        sanitizeErrorMessage(result?.message, accountData.value?.texts?.errorOccurred || 'Unregistration failed'),
+        sanitizeErrorMessage(result?.message, effectiveAccountData.value?.texts?.errorOccurred || 'Unregistration failed'),
       defaultErrorMsg: 'Unregistration failed',
     });
   };
 
   /**
    * Submits a customer account merge request to Loyalista for review/approval.
-   * Sends POST /account/merge/customer/ with parameter customer_email_address.
+   * Sends POST /rest/loyalista/account/merge/ with parameter customer_email_address.
    * As this submits an application rather than immediately altering balances,
    * it does not depend on immediate point balance changes.
    */
@@ -593,7 +679,7 @@ export const useLoyalistaAccount = () => {
     const trimmed = (email || '').trim();
     if (!trimmed || trimmed.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       const msg =
-        accountData.value?.texts?.errorOccurred?.replace('{error}', 'Invalid email') ||
+        effectiveAccountData.value?.texts?.errorOccurred?.replace('{error}', 'Invalid email') ||
         'Ungültige oder fehlende E-Mail-Adresse';
       actionError.value = msg;
       return Promise.resolve({ success: false, message: msg });
@@ -603,7 +689,7 @@ export const useLoyalistaAccount = () => {
     body.append('customer_email_address', trimmed);
 
     return executeMutation({
-      endpoint: '/account/merge/customer/',
+      endpoint: '/rest/loyalista/account/merge/',
       body,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -611,7 +697,7 @@ export const useLoyalistaAccount = () => {
       skipRefetch: true,
       isSuccess: (result) => Boolean(result && result.status === 'OK'),
       getErrorMessage: (result) =>
-        sanitizeErrorMessage(result?.message, accountData.value?.texts?.errorOccurred || 'Merge failed'),
+        sanitizeErrorMessage(result?.message, effectiveAccountData.value?.texts?.errorOccurred || 'Merge failed'),
       defaultErrorMsg: 'Merge failed',
     });
   };
@@ -624,16 +710,23 @@ export const useLoyalistaAccount = () => {
    * Strictly verifies backend contract: success signal requires result.success === true.
    */
   const saveBirthday = async (birthday: string): Promise<LoyalistaMutationResult> => {
+    if (isEditMode?.value || shouldUseFakeData?.value) {
+      return Promise.resolve({
+        success: false,
+        message: 'Aktionen sind im Editor-Modus deaktiviert.',
+      });
+    }
+
     const trimmed = (birthday || '').trim();
     if (!trimmed || !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      const msg = accountData.value?.texts?.errorEnterBirthday || 'Bitte geben Sie ein Geburtsdatum ein.';
+      const msg = effectiveAccountData.value?.texts?.errorEnterBirthday || 'Bitte geben Sie ein Geburtsdatum ein.';
       actionError.value = msg;
       return Promise.resolve({ success: false, message: msg });
     }
 
     const [year, month, day] = trimmed.split('-').map(Number);
     if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
-      const msg = accountData.value?.texts?.errorBirthdaySave || 'Ungültiges Datumsformat';
+      const msg = effectiveAccountData.value?.texts?.errorBirthdaySave || 'Ungültiges Datumsformat';
       actionError.value = msg;
       return Promise.resolve({ success: false, message: msg });
     }
@@ -641,7 +734,7 @@ export const useLoyalistaAccount = () => {
     // Days in month check (handles leap years correctly)
     const daysInMonth = new Date(year, month, 0).getDate();
     if (day > daysInMonth) {
-      const msg = accountData.value?.texts?.errorBirthdaySave || 'Ungültiges Datumsformat';
+      const msg = effectiveAccountData.value?.texts?.errorBirthdaySave || 'Ungültiges Datumsformat';
       actionError.value = msg;
       return Promise.resolve({ success: false, message: msg });
     }
@@ -660,7 +753,7 @@ export const useLoyalistaAccount = () => {
       year < minY || (year === minY && month < todayM) || (year === minY && month === todayM && day < todayD);
 
     if (isFuture || isTooOld) {
-      const msg = accountData.value?.texts?.errorBirthdaySave || 'Ungültiges Datumsformat';
+      const msg = effectiveAccountData.value?.texts?.errorBirthdaySave || 'Ungültiges Datumsformat';
       actionError.value = msg;
       return Promise.resolve({ success: false, message: msg });
     }
@@ -678,14 +771,14 @@ export const useLoyalistaAccount = () => {
       getErrorMessage: (result) =>
         sanitizeErrorMessage(
           result?.message,
-          accountData.value?.texts?.errorBirthdaySave ||
-            accountData.value?.texts?.errorOccurred ||
+          effectiveAccountData.value?.texts?.errorBirthdaySave ||
+            effectiveAccountData.value?.texts?.errorOccurred ||
             'Fehler beim Speichern des Geburtsdatums.',
         ),
       getSuccessMessage: (result) =>
         typeof result?.message === 'string' && result.message.trim()
           ? result.message
-          : accountData.value?.texts?.successBirthdaySaved || '',
+          : effectiveAccountData.value?.texts?.successBirthdaySaved || '',
       defaultErrorMsg: 'Fehler beim Speichern des Geburtsdatums.',
     });
   };
@@ -694,13 +787,13 @@ export const useLoyalistaAccount = () => {
    * Hint text for customer birthday with tokens replaced.
    */
   const birthdayHint = computed<string | null>(() => {
-    const template = accountData.value?.texts?.birthday_hint;
+    const template = effectiveAccountData.value?.texts?.birthday_hint;
     if (!template || !template.trim()) return null;
     return replaceLoyalistaAccountTokens(
       template,
       {
         pointsLabel: pointsLabel.value,
-        birthdayPoints: accountData.value?.birthday_points,
+        birthdayPoints: effectiveAccountData.value?.birthday_points,
       },
       numberLocale.value,
     );
@@ -709,23 +802,23 @@ export const useLoyalistaAccount = () => {
   /**
    * Saved birthday for authenticated customer.
    */
-  const customerBirthday = computed<string | null>(() => accountData.value?.customer?.birthday || null);
+  const customerBirthday = computed<string | null>(() => effectiveAccountData.value?.customer?.birthday || null);
 
   /**
    * Whether the authenticated customer has already saved their birthday.
    */
-  const hasBirthday = computed<boolean>(() => Boolean(accountData.value?.customer?.birthday));
+  const hasBirthday = computed<boolean>(() => Boolean(effectiveAccountData.value?.customer?.birthday));
 
   /**
    * Merchant-configured label for save birthday button.
    */
-  const saveBtnLabel = computed<string>(() => accountData.value?.texts?.save_btn_label || '');
+  const saveBtnLabel = computed<string>(() => effectiveAccountData.value?.texts?.save_btn_label || '');
 
   /**
    * Hint text for account merge with tokens replaced.
    */
   const joinRequestHint = computed<string | null>(() => {
-    const template = accountData.value?.texts?.join_request_hint;
+    const template = effectiveAccountData.value?.texts?.join_request_hint;
     if (!template || !template.trim()) return null;
     return replaceLoyalistaAccountTokens(
       template,
@@ -740,7 +833,7 @@ export const useLoyalistaAccount = () => {
   /**
    * Merchant-configured label for account merge button.
    */
-  const mergeBtnLabel = computed<string>(() => accountData.value?.texts?.merge_btn_label || '');
+  const mergeBtnLabel = computed<string>(() => effectiveAccountData.value?.texts?.merge_btn_label || '');
 
   if (import.meta.client) {
     // Clear cached state on logout and fetch fresh data on customer login
