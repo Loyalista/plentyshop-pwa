@@ -4,6 +4,12 @@
       "blockTitle": "Loyalista Punkte",
       "loading": "Lade Punktedaten...",
       "editorPreview": "Loyalista Punkteanzeige (Editor-Vorschau)"
+    },
+    "account": {
+      "heading": "Treueprogramm & Punkte",
+      "loading": "Lade Punktedaten...",
+      "error": "Fehler beim Laden der Punktedaten",
+      "retry": "Erneut versuchen"
     }
   }
 }

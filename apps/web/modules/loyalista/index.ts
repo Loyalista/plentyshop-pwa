@@ -2,9 +2,12 @@ import {
   useLogger,
   defineNuxtModule,
   addImportsDir,
+  addComponentsDir,
   createResolver,
+  extendPages,
 } from '@nuxt/kit';
 import type { Config as TailwindConfig } from 'tailwindcss/types/config';
+import type { NuxtPage } from '@nuxt/schema';
 
 export default defineNuxtModule({
   meta: {
@@ -18,8 +21,7 @@ export default defineNuxtModule({
     logger.info('LoyalistaPwaModule initialized');
 
     /**
-     * Hook to modify the TailwindCSS configuration
-     * Add runtime components and files to Tailwind content to enable classes
+     * Extends Tailwind content configuration to include module runtime files.
      */
     nuxt.hook('tailwindcss:config', (config: Partial<TailwindConfig>) => {
       if (config.content && Array.isArray(config.content)) {
@@ -29,7 +31,7 @@ export default defineNuxtModule({
     });
 
     /**
-     * Register module-specific language files to the existing i18n module
+     * Registers module localization files with the existing i18n module.
      */
     nuxt.hook('i18n:registerModule', (register) => {
       register({
@@ -48,12 +50,31 @@ export default defineNuxtModule({
     });
 
     /**
-     * Auto-import composables from runtime
+     * Registers runtime components for auto-import.
+     */
+    addComponentsDir({
+      path: resolve('./runtime/components'),
+      pathPrefix: false,
+    });
+
+    /**
+     * Registers runtime composables for auto-import.
      */
     addImportsDir(resolve('./runtime/composables'));
 
     /**
-     * Ready hook to log a message when the module is ready
+     * Registers the loyalty points overview page within the account area.
+     */
+    extendPages((pages: NuxtPage[]) => {
+      pages.push({
+        name: 'my-account-loyalty',
+        path: '/my-account/loyalty',
+        file: resolve('./runtime/pages/my-account/loyalty.vue'),
+      });
+    });
+
+    /**
+     * Logs confirmation when module initialization is complete.
      */
     nuxt.hook('ready', () => {
       logger.info('Loyalista PWA module is ready');

@@ -28,14 +28,14 @@ export interface LoyalistaApiResponse {
 }
 
 /**
- * Replace tokens in template text according to the LTS specification.
+ * Replaces placeholder tokens in product text templates.
  *
  * Supported tokens:
- * - [points_for_product]  Base earning points for the product
- * - [number_of_points]    Base earning points for the product (synonym)
- * - [points_for_signup]   Bonus points for account registration
- * - [number_of_extra_points] Extra points from product or category bonus
- * - [points_label]        Configured label for points (e.g. "Punkte" / "Points")
+ * - [points_for_product]      Base earning points for the product
+ * - [number_of_points]        Base earning points for the product (synonym)
+ * - [points_for_signup]       Bonus points for account registration
+ * - [number_of_extra_points]  Extra points from product or category bonus
+ * - [points_label]            Configured label for points (e.g. "Punkte" / "Points")
  */
 export const replaceLoyalistaTokens = (
   template: string,
@@ -81,16 +81,10 @@ export const replaceLoyalistaTokens = (
 };
 
 /**
- * Composable for managing Loyalista product points on the product detail page.
+ * Composable for calculating and displaying loyalty points on product detail pages.
  *
- * Responsibilities:
- * - Read current product, variation ID, and price from official PlentyONE composables
- * - Fetch loyalty program configuration & merchant texts from existing PlentyONE plugin endpoint
- * - Support both guest visitors and registered customers
- * - Calculate earning points based on active price and revenue_to_point ratio
- * - Calculate extra points based on category and variation matching
- * - Render merchant texts with token replacement matching LTS
- * - Provide reactive state without silent fallbacks
+ * Coordinates loyalty configuration fetching, computes base and extra points
+ * for the active variation and price, and formats localized merchant texts.
  */
 export const useLoyalistaProductPoints = () => {
   const { currentProduct } = useProducts();
@@ -107,12 +101,13 @@ export const useLoyalistaProductPoints = () => {
   let fetchPromise: Promise<LoyalistaProductDataResponse | null> | null = null;
 
   /**
-   * Fetch loyalty program configuration & merchant texts from the existing PlentyONE plugin endpoint.
-   * Both authenticated customers and guests are supported.
-   * Cached in Nuxt state to avoid duplicate requests during variation changes.
+   * Fetches loyalty program configuration and merchant texts.
+   * Supports both authenticated customers and guest visitors.
+   *
+   * @param force - If true, bypasses in-flight request deduplication and cached state
    */
   const fetchProductData = async (force = false): Promise<LoyalistaProductDataResponse | null> => {
-    // Only execute on client because /rest/ is handled by the PlentyONE PHP backend
+    // Execute client-side only because REST endpoints require session context
     if (!import.meta.client) {
       return null;
     }
@@ -197,8 +192,8 @@ export const useLoyalistaProductPoints = () => {
   });
 
   /**
-   * Base earning points: Math.round(price / revenue_to_point).
-   * Returns null if revenue_to_point is missing or invalid (no silent default).
+   * Base earning points calculated from product price and conversion ratio.
+   * Returns null if configuration is missing or invalid.
    */
   const earningPoints = computed<number | null>(() => {
     if (
@@ -232,7 +227,7 @@ export const useLoyalistaProductPoints = () => {
 
     let extra = 0;
 
-    // 1. Product extra points
+    // Product-specific extra points
     const productExtraAmount = parseFloat(String(productData.value.product_extra_points || 0)) || 0;
     const configProductIds = (productData.value.product_ids || '')
       .split(',')
@@ -245,7 +240,7 @@ export const useLoyalistaProductPoints = () => {
       }
     }
 
-    // 2. Category extra points
+    // Category-specific extra points
     const categoryExtraAmount = parseFloat(String(productData.value.category_extra_points || 0)) || 0;
     const configCategoryIds = (productData.value.category_ids || '')
       .split(',')
@@ -263,8 +258,8 @@ export const useLoyalistaProductPoints = () => {
   });
 
   /**
-   * Total points: base earning points + extra points.
-   * Null if base points cannot be calculated (e.g. missing backend configuration).
+   * Total points combining base earning points and applicable extra points.
+   * Returns null if base points cannot be calculated.
    */
   const totalPoints = computed<number | null>(() => {
     if (earningPoints.value === null) {
@@ -276,10 +271,9 @@ export const useLoyalistaProductPoints = () => {
   const isRegistered = computed<boolean>(() => Boolean(productData.value?.user_registered));
 
   /**
-   * Rendered merchant text with token substitution.
-   * Selects registered or unregistered text according to user_registered status.
-   * Appends extra_points text if applicable.
-   * Returns null if required merchant configuration is not available (no silent fallback).
+   * Localized merchant text with replaced tokens.
+   * Selects registered or unregistered template based on customer status,
+   * appending extra points notice when applicable.
    */
   const renderedText = computed<string | null>(() => {
     if (!productData.value || !productData.value.texts) {
@@ -316,7 +310,7 @@ export const useLoyalistaProductPoints = () => {
     watch(
       isAuthorized,
       () => {
-        // Refetch product data to refresh user_registered status and text for newly logged-in/logged-out customer
+        // Refresh loyalty status and texts on customer authorization change
         fetchProductData(true);
       },
     );

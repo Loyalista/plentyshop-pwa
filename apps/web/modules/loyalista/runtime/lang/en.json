@@ -4,6 +4,12 @@
       "blockTitle": "Loyalista Points",
       "loading": "Loading points data...",
       "editorPreview": "Loyalista Points Display (Editor Preview)"
+    },
+    "account": {
+      "heading": "Loyalty Program & Points",
+      "loading": "Loading points data...",
+      "error": "Failed to load loyalty points data",
+      "retry": "Retry"
     }
   }
 }
