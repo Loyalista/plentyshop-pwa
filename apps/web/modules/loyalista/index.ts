@@ -4,10 +4,8 @@ import {
   addImportsDir,
   addComponentsDir,
   createResolver,
-  extendPages,
 } from '@nuxt/kit';
 import type { Config as TailwindConfig } from 'tailwindcss/types/config';
-import type { NuxtPage } from '@nuxt/schema';
 
 export default defineNuxtModule({
   meta: {
@@ -62,17 +60,6 @@ export default defineNuxtModule({
      * Registers runtime composables for auto-import.
      */
     addImportsDir(resolve('./runtime/composables'));
-
-    /**
-     * Registers the loyalty points overview page within the account area.
-     */
-    extendPages((pages: NuxtPage[]) => {
-      pages.push({
-        name: 'my-account-loyalty',
-        path: '/my-account/loyalty',
-        file: resolve('./runtime/pages/my-account/loyalty.vue'),
-      });
-    });
 
     /**
      * Logs confirmation when module initialization is complete.
