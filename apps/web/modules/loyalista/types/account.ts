@@ -55,3 +55,10 @@ export interface LoyalistaAccountApiResponse {
   data?: LoyalistaAccountDataResponse;
   message?: string;
 }
+
+export interface LoyalistaMutationResult {
+  success: boolean;
+  postSuccess?: boolean;
+  refetchSuccess?: boolean;
+  message?: string;
+}

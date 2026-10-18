@@ -9,7 +9,12 @@
       "heading": "Loyalty Program & Points",
       "loading": "Loading points data...",
       "error": "Failed to load loyalty points data",
-      "retry": "Retry"
+      "retry": "Retry",
+      "emailPlaceholder": "Email address",
+      "mergeSuccess": "Request created successfully.",
+      "birthdaySuccess": "Birth date successfully saved.",
+      "invalidEmail": "Invalid or missing email address",
+      "invalidDate": "Invalid date format"
     }
   }
 }

@@ -9,7 +9,12 @@
       "heading": "Treueprogramm & Punkte",
       "loading": "Lade Punktedaten...",
       "error": "Fehler beim Laden der Punktedaten",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "emailPlaceholder": "E-Mail-Adresse",
+      "mergeSuccess": "Anfrage erfolgreich erstellt.",
+      "birthdaySuccess": "Geburtsdatum erfolgreich gespeichert.",
+      "invalidEmail": "Ungültige oder fehlende E-Mail-Adresse",
+      "invalidDate": "Ungültiges Datumsformat"
     }
   }
 }

@@ -37,11 +37,7 @@
       </div>
     </div>
 
-    <div
-      v-else-if="isRegistered"
-      class="space-y-6 my-4"
-      data-testid="loyalista-account-registered"
-    >
+    <div v-else-if="isRegistered" class="space-y-6 my-4" data-testid="loyalista-account-registered">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div
           class="flex flex-col p-5 bg-white border border-neutral-200 rounded-lg shadow-sm"
@@ -114,23 +110,134 @@
           </p>
         </div>
       </div>
+
+      <LoyalistaAccountBirthday />
+
+      <LoyalistaAccountMerge />
+
+      <div
+        v-if="disclaimer && unregisterBtnLabel"
+        class="mt-8 pt-6 border-t border-neutral-200"
+        data-testid="loyalista-optout-section"
+      >
+        <div class="mb-4">
+          <label
+            class="flex items-start gap-3 cursor-pointer select-none"
+            data-testid="loyalista-optout-checkbox-label"
+          >
+            <input
+              v-model="optOutConsent"
+              :disabled="pendingRefetch || actionLoading"
+              type="checkbox"
+              class="h-5 w-5 mt-0.5 rounded border-neutral-300 text-negative-600 focus:ring-negative-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="loyalista-optout-checkbox"
+            />
+            <span class="typography-text-sm text-neutral-700 leading-relaxed" data-testid="loyalista-optout-disclaimer">
+              {{ disclaimer }}
+            </span>
+          </label>
+        </div>
+
+        <div
+          v-if="actionError"
+          class="mb-4 p-3 bg-negative-50 border border-negative-200 rounded text-negative-800 text-sm flex items-center gap-2"
+          data-testid="loyalista-optout-error"
+        >
+          <SfIconWarning class="text-negative-600 shrink-0" size="sm" />
+          <span>{{ actionError }}</span>
+        </div>
+
+        <button
+          v-if="pendingRefetch"
+          type="button"
+          :disabled="loading"
+          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="loyalista-optout-retry-button"
+          @click="fetchAccountData(true)"
+        >
+          <SfLoaderCircular v-if="loading" size="sm" class="mr-2 text-white" />
+          {{ t('loyalista.account.retry') }}
+        </button>
+
+        <button
+          v-else
+          type="button"
+          :disabled="!optOutConsent || actionLoading"
+          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-negative-700 hover:text-negative-800 bg-white border border-negative-300 hover:bg-negative-50 active:bg-negative-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="loyalista-optout-button"
+          @click="handleUnregister"
+        >
+          <SfLoaderCircular v-if="actionLoading" size="sm" class="mr-2 text-negative-700" />
+          {{ unregisterBtnLabel }}
+        </button>
+      </div>
     </div>
 
     <div
-      v-else-if="accountData && !isRegistered"
+      v-else-if="accountData && !isRegistered && unregisteredOffer && joinBtnLabel"
       class="p-6 bg-white border border-neutral-200 rounded-lg shadow-sm my-4"
       data-testid="loyalista-account-unregistered"
     >
-      <div v-if="unregisteredOffer" class="typography-text-base text-neutral-800 leading-relaxed" data-testid="loyalista-unregistered-offer">
-        {{ unregisteredOffer }}
+      <div class="mb-6">
+        <label class="flex items-start gap-3 cursor-pointer select-none" data-testid="loyalista-optin-checkbox-label">
+          <input
+            v-model="optInConsent"
+            :disabled="pendingRefetch || actionLoading"
+            type="checkbox"
+            class="h-5 w-5 mt-0.5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="loyalista-optin-checkbox"
+          />
+          <span
+            class="typography-text-base text-neutral-800 leading-relaxed"
+            data-testid="loyalista-unregistered-offer"
+          >
+            {{ unregisteredOffer }}
+          </span>
+        </label>
       </div>
+
+      <div
+        v-if="actionError"
+        class="mb-4 p-3 bg-negative-50 border border-negative-200 rounded text-negative-800 text-sm flex items-center gap-2"
+        data-testid="loyalista-optin-error"
+      >
+        <SfIconWarning class="text-negative-600 shrink-0" size="sm" />
+        <span>{{ actionError }}</span>
+      </div>
+
+      <button
+        v-if="pendingRefetch"
+        type="button"
+        :disabled="loading"
+        class="inline-flex items-center justify-center px-6 py-2.5 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        data-testid="loyalista-optin-retry-button"
+        @click="fetchAccountData(true)"
+      >
+        <SfLoaderCircular v-if="loading" size="sm" class="mr-2 text-white" />
+        {{ t('loyalista.account.retry') }}
+      </button>
+
+      <button
+        v-else
+        type="button"
+        :disabled="!optInConsent || actionLoading"
+        class="inline-flex items-center justify-center px-6 py-2.5 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        data-testid="loyalista-optin-button"
+        @click="handleRegister"
+      >
+        <SfLoaderCircular v-if="actionLoading" size="sm" class="mr-2 text-white" />
+        {{ joinBtnLabel }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { SfLoaderCircular, SfIconWarning } from '@storefront-ui/vue';
 import { useLoyalistaAccount } from '../../composables/useLoyalistaAccount';
+import LoyalistaAccountBirthday from './LoyalistaAccountBirthday.vue';
+import LoyalistaAccountMerge from './LoyalistaAccountMerge.vue';
 
 const { t, locale } = useI18n();
 
@@ -151,7 +258,44 @@ const {
   lockedHint,
   expiryHint,
   unregisteredOffer,
+  joinBtnLabel,
+  unregisterBtnLabel,
+  disclaimer,
+  actionLoading,
+  actionError,
+  pendingRefetch,
+  registerCustomer,
+  unregisterCustomer,
+  isAuthorized,
 } = useLoyalistaAccount();
+
+const optInConsent = ref(false);
+const optOutConsent = ref(false);
+
+/**
+ * Resets checkbox consent states upon registration status change or logout
+ * to prevent carrying consent over between opt-in, opt-out, or sessions.
+ */
+watch([isRegistered, isAuthorized], () => {
+  optInConsent.value = false;
+  optOutConsent.value = false;
+});
+
+const handleRegister = async () => {
+  if (!optInConsent.value || actionLoading.value || pendingRefetch.value) return;
+  const res = await registerCustomer();
+  if (res.success) {
+    optInConsent.value = false;
+  }
+};
+
+const handleUnregister = async () => {
+  if (!optOutConsent.value || actionLoading.value || pendingRefetch.value) return;
+  const res = await unregisterCustomer();
+  if (res.success) {
+    optOutConsent.value = false;
+  }
+};
 
 const formatPoints = (points: number): string => {
   const numberLocale = locale.value === 'de' ? 'de-DE' : 'en-US';
