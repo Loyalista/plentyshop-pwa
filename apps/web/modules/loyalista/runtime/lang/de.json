@@ -18,6 +18,24 @@
       "guestDescription": "Melden Sie sich an, um Ihren aktuellen Punktestand einzusehen, Punkte einzulösen und Ihr Bonuskonto zu verwalten.",
       "login": "Jetzt anmelden",
       "editorPreviewNotice": "Vorschau im Shop-Editor (Beispieldaten)"
+    },
+    "checkout": {
+      "heading": "Loyalista Bonuspunkte",
+      "loading": "Lade Punktedaten...",
+      "guestNotice": "Melden Sie sich an, um Punkte einzulösen oder mit dieser Bestellung Bonuspunkte zu sammeln.",
+      "login": "Jetzt anmelden",
+      "participate": "Am Bonusprogramm teilnehmen",
+      "noRedeem": "Punkte sammeln und nicht einlösen",
+      "apply": "Einlösen",
+      "maxRedeemableHint": "Maximal einlösbar: {max} {label}",
+      "errorLoadData": "Fehler beim Laden der Checkout-Punktedaten.",
+      "couponAlreadyActive": "Es ist bereits ein Gutschein auf Ihren Warenkorb angewendet.",
+      "invalidPointsAmount": "Bitte geben Sie eine gültige Punktzahl ein.",
+      "pointsExceedLimit": "Die eingegebene Punktzahl übersteigt das Maximum.",
+      "redeemSuccess": "Punkte erfolgreich eingelöst. Der Gutschein wurde auf Ihren Warenkorb angewendet.",
+      "redeemFailed": "Einlösen der Punkte fehlgeschlagen.",
+      "registerSuccess": "Erfolgreich für das Bonusprogramm registriert.",
+      "registerFailed": "Registrierung für das Bonusprogramm fehlgeschlagen."
     }
   }
 }

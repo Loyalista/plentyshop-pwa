@@ -11,12 +11,15 @@ Loyalista frontend module for the PlentyONE PWA Shop.
 
 ## Architecture & Components
 
-The module integrates with PlentyONE PWA through configurable Shop-Editor content blocks and session-bound REST endpoints:
+The module integrates with PlentyONE PWA through configurable Shop-Editor content blocks, dynamic module rendering injection, Site-Settings, and session-bound REST endpoints:
 
-- **`LoyalistaAccount`**: Configurable Shop-Editor content block for storefront customer loyalty accounts. Features points balance overview (redeemable, locked, expiring), program opt-in and opt-out, birthday bonus management, and account merge requests. The content page and customer access requirements (such as "Login required") are configured by the merchant directly in the PlentyONE Shop-Editor.
+- **`LoyalistaCheckout`**: Checkout integration component injected into the official `checkout.afterBuyButton` area in the order summary. Supports guest visitors, unregistered customer opt-in, points balance display, potential points earning, full/partial redemption, coupon generation, and reactive cart updating via native PlentyONE coupon workflows.
+- **`LoyalistaAccount`**: Configurable Shop-Editor content block for storefront customer loyalty accounts. Features points balance overview (redeemable, locked, expiring), program opt-in and opt-out, birthday bonus management, and account merge requests.
 - **`LoyalistaProductPoints`**: Configurable Shop-Editor content block displaying calculated base and category/product extra points on product detail pages.
+- **`useLoyalistaCheckout`**: Composable managing checkout points calculation, redemption locking, session coupon creation, and basket updates.
 - **`useLoyalistaAccount`**: Composable managing customer loyalty data fetching, session changes, and account mutations via `/rest/loyalista/` endpoints.
 - **`useLoyalistaProductPoints`**: Composable for product detail page points calculation and localized merchant text formatting.
+- **Site Settings (`Loyalista Checkout`)**: Global configuration under Checkout in the PlentyONE Shop-Editor allowing merchants to toggle checkout widget activation and customize drop shadow, borders, border color, background color, and padding.
 
 ## Origin / Source
 

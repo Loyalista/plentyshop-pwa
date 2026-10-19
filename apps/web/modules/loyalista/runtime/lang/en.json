@@ -18,6 +18,24 @@
       "guestDescription": "Log in to check your points balance, redeem rewards, and manage your loyalty account.",
       "login": "Log in now",
       "editorPreviewNotice": "Shop-Editor preview (Sample data)"
+    },
+    "checkout": {
+      "heading": "Loyalista Loyalty Points",
+      "loading": "Loading points data...",
+      "guestNotice": "Log in to redeem points or earn rewards with this order.",
+      "login": "Log in now",
+      "participate": "Join loyalty program",
+      "noRedeem": "Collect points and do not redeem",
+      "apply": "Apply",
+      "maxRedeemableHint": "Maximum redeemable: {max} {label}",
+      "errorLoadData": "Failed to load checkout loyalty data.",
+      "couponAlreadyActive": "A coupon is already applied to your shopping cart.",
+      "invalidPointsAmount": "Please enter a valid points amount.",
+      "pointsExceedLimit": "Entered points exceed the redeemable maximum.",
+      "redeemSuccess": "Points successfully redeemed. Coupon has been applied to your cart.",
+      "redeemFailed": "Failed to redeem loyalty points.",
+      "registerSuccess": "Successfully registered for the loyalty program.",
+      "registerFailed": "Failed to register for the loyalty program."
     }
   }
 }

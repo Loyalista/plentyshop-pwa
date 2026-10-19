@@ -3,6 +3,8 @@ import {
   defineNuxtModule,
   addImportsDir,
   addComponentsDir,
+  addComponent,
+  addPlugin,
   createResolver,
 } from '@nuxt/kit';
 import type { Config as TailwindConfig } from 'tailwindcss/types/config';
@@ -55,6 +57,21 @@ export default defineNuxtModule({
       pattern: '**/*.vue',
       pathPrefix: false,
     });
+
+    /**
+     * Registers LoyalistaCheckout globally for dynamic module rendering.
+     */
+    await addComponent({
+      name: 'LoyalistaCheckout',
+      filePath: resolve('./runtime/components/checkout/LoyalistaCheckout.vue'),
+      global: true,
+      priority: 10,
+    });
+
+    /**
+     * Injects LoyalistaCheckout into checkout.afterBuyButton rendering area.
+     */
+    addPlugin(resolve('./runtime/plugins/loyalistaCheckout.ts'));
 
     /**
      * Registers runtime composables for auto-import.
