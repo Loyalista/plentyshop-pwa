@@ -1,4 +1,4 @@
-import { computed, watch, onMounted, toRefs } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { cartGetters } from '@plentymarkets/shop-api';
 import type {
   LoyalistaCheckoutData,
@@ -92,10 +92,8 @@ export const replaceLoyalistaCheckoutTokens = (
 };
 
 /**
- * Calculates the maximum whole points redeemable for a given basket total and conversion rate.
- * Uses strict integer flooring without artificial epsilons to guarantee that the calculated
- * point amount is mathematically strictly less than or equal to the server-side validation
- * threshold in CheckoutController::createCoupon() ($basket_total / $one_point_to_value).
+ * Calculates the maximum integer points redeemable for a given basket total and conversion rate.
+ * Uses integer flooring to align with server-side validation in CheckoutController::createCoupon().
  */
 export const calculateMaxPointsByBasket = (basketTotal: number, pointToValue: number): number => {
   const total = Number(basketTotal);
@@ -457,7 +455,7 @@ export const useLoyalistaCheckout = () => {
           await fetchCheckoutData();
           await fetchBasketTotal();
         } catch {
-          // Secondary session refetch hiccup must not mask successful coupon creation.
+          // Secondary refetch failure does not affect the backend-confirmed redemption.
         }
         return true;
       } else {

@@ -133,12 +133,12 @@ describe('calculateMaxPointsByBasket', () => {
   });
 
   it('matches backend CheckoutController::createCoupon validation threshold strictly', () => {
-    // In PHP: $max_points = floatval(77.74 / 0.01) is 7773.99999999999909.
-    // If client sent 7774, backend would reject with errorInvalidPointsAmount (7774 > 7773.999...).
-    // Strict Math.floor yields 7773, which is 100% accepted by backend and coupon value is <= basketTotal.
+    // In PHP: $max_points = floatval(77.74 / 0.01) evaluates to 7773.99999999999909.
+    // Client sending 7774 would exceed the threshold and be rejected by CheckoutController ($points > $max_points).
+    // Math.floor yields 7773, keeping coupon value <= basket total.
     expect(calculateMaxPointsByBasket(77.74, 0.01)).toBe(7773);
-    // In PHP: $max_points = floatval(19.99 / 0.01) is 1998.99999999999977.
-    // Strict Math.floor yields 1998, which is 100% accepted by backend.
+    // In PHP: $max_points = floatval(19.99 / 0.01) evaluates to 1998.99999999999977.
+    // Math.floor yields 1998, keeping points within accepted range.
     expect(calculateMaxPointsByBasket(19.99, 0.01)).toBe(1998);
   });
 
