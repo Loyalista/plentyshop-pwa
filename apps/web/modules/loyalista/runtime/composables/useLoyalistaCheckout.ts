@@ -277,9 +277,30 @@ export const useLoyalistaCheckout = () => {
 
   const renderedCouponAppliedText = computed<string>(() => {
     const template = checkoutData.value?.texts?.coupon_already_applied || '';
+    if (!template) {
+      return '';
+    }
     return replaceLoyalistaCheckoutTokens(
       template,
       {
+        accountBalance: accountBalance.value,
+        pointsForOrder: cartEarningPoints.value,
+        pointsLabel: pointsLabel.value,
+      },
+      currentLocaleString.value,
+    );
+  });
+
+  const renderedNoRedeemText = computed<string>(() => {
+    const template = checkoutData.value?.texts?.no_redeem || '';
+    if (!template) {
+      return '';
+    }
+    return replaceLoyalistaCheckoutTokens(
+      template,
+      {
+        accountBalance: accountBalance.value,
+        pointsForOrder: cartEarningPoints.value,
         pointsLabel: pointsLabel.value,
       },
       currentLocaleString.value,
@@ -593,6 +614,7 @@ export const useLoyalistaCheckout = () => {
     maxRedeemablePoints,
     maxDiscountValue,
     renderedRegisteredText,
+    renderedNoRedeemText,
     renderedFullRedeemText,
     renderedPartialRedeemText,
     renderedUnregisteredText,

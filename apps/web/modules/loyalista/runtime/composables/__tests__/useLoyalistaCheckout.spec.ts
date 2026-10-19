@@ -74,6 +74,43 @@ describe('replaceLoyalistaCheckoutTokens', () => {
     const result = replaceLoyalistaCheckoutTokens(template, {}, 'de-DE');
     expect(result).toBe('0  0,00 0');
   });
+
+  it('replaces [points_label] in the no-redeem option template with merchant configured label', () => {
+    const template = 'Weiter sammeln und keine [points_label] einlösen.';
+    const result = replaceLoyalistaCheckoutTokens(
+      template,
+      { pointsLabel: 'Testpunkte' },
+      'de-DE',
+    );
+    expect(result).toBe('Weiter sammeln und keine Testpunkte einlösen.');
+  });
+
+  it('replaces [points_label] in English no-redeem option template', () => {
+    const template = "Keep collecting and don't redeem [points_label].";
+    const result = replaceLoyalistaCheckoutTokens(
+      template,
+      { pointsLabel: 'Points' },
+      'en-US',
+    );
+    expect(result).toBe("Keep collecting and don't redeem Points.");
+  });
+
+  it('replaces [points_label] case-insensitively with dynamic merchant labels', () => {
+    const templateUpper = 'Option: [POINTS_LABEL]';
+    const templateMixed = 'Option: [Points_Label]';
+    expect(replaceLoyalistaCheckoutTokens(templateUpper, { pointsLabel: 'Treueherzen' })).toBe('Option: Treueherzen');
+    expect(replaceLoyalistaCheckoutTokens(templateMixed, { pointsLabel: 'Treueherzen' })).toBe('Option: Treueherzen');
+  });
+
+  it('handles templates with both [points_label] and [account_balance]', () => {
+    const template = 'Weiter sammeln ([account_balance] [points_label] verfügbar) und keine [points_label] einlösen.';
+    const result = replaceLoyalistaCheckoutTokens(
+      template,
+      { accountBalance: 1250, pointsLabel: 'Testpunkte' },
+      'de-DE',
+    );
+    expect(result).toBe('Weiter sammeln (1.250 Testpunkte verfügbar) und keine Testpunkte einlösen.');
+  });
 });
 
 describe('calculateMaxPointsByBasket', () => {

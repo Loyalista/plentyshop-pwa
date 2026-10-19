@@ -113,7 +113,7 @@
               class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500 cursor-pointer"
               data-testid="loyalista-option-skip"
             />
-            <span>{{ checkoutData?.texts?.no_redeem || t('loyalista.checkout.noRedeem') }}</span>
+            <span>{{ renderedNoRedeemText || t('loyalista.checkout.noRedeem') }}</span>
           </label>
 
           <!-- Option: Full Redeem -->
@@ -286,6 +286,7 @@ const {
   hasActiveCoupon,
   maxRedeemablePoints,
   renderedRegisteredText,
+  renderedNoRedeemText,
   renderedFullRedeemText,
   renderedPartialRedeemText,
   renderedUnregisteredText,
